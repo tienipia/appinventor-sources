@@ -11,6 +11,7 @@ Table of Contents:
 * [Button](#Button)
 * [CheckBox](#CheckBox)
 * [DatePicker](#DatePicker)
+* [FaLABWV](#FaLABWV)
 * [Image](#Image)
 * [Label](#Label)
 * [ListPicker](#ListPicker)
@@ -348,6 +349,348 @@ Valid values for the month field are 1-12 and 1-31 for the day field.
 
 {:id="DatePicker.SetDateToDisplayFromInstant" class="method"} <i/> SetDateToDisplayFromInstant(*instant*{:.InstantInTime})
 : Allows the user to set the date from the instant to be displayed when the date picker opens.
+
+## FaLABWV  {#FaLABWV}
+
+Component for FaLABWV
+
+
+
+### Properties  {#FaLABWV-Properties}
+
+{:.properties}
+
+{:id="FaLABWV.AutoLoadImages" .boolean .bo} *AutoLoadImages*
+: Sets whether the WebView should load image resources
+
+{:id="FaLABWV.AutoplayMedia" .boolean .bo} *AutoplayMedia*
+: Sets whether the WebView requires a user gesture to play media
+
+{:id="FaLABWV.BackgroundColor" .number .wo .bo} *BackgroundColor*
+: Sets background color of webview
+
+{:id="FaLABWV.BlockNetworkLoads" .boolean .bo} *BlockNetworkLoads*
+: Sets whether the WebView should not load resources from the network.Use this to save data.
+
+{:id="FaLABWV.CacheMode" .number .bo} *CacheMode*
+: Sets cache mode for active webview
+
+{:id="FaLABWV.CurrentPageTitle" .text .ro .bo} *CurrentPageTitle*
+: Title of the page currently viewed
+
+{:id="FaLABWV.CurrentUrl" .text .ro .bo} *CurrentUrl*
+: URL of the page currently viewed
+
+{:id="FaLABWV.DeepLinks" .boolean} *DeepLinks*
+: Sets whether to enable deep links or not i.e. tel: , whatsapp: , sms: , etc.
+
+{:id="FaLABWV.DesktopMode" .boolean .bo} *DesktopMode*
+: Sets whether to load content in desktop mode
+
+{:id="FaLABWV.DisplayZoom" .boolean} *DisplayZoom*
+: Sets whether the WebView should display on-screen zoom controls
+
+{:id="FaLABWV.EnableJS" .boolean .bo} *EnableJS*
+: Tells the WebView to enable JavaScript execution.
+
+{:id="FaLABWV.FileAccess" .boolean .bo} *FileAccess*
+: Sets whether webview can access local files.Use this to enable file uploading and loading files using HTML
+
+{:id="FaLABWV.FollowLinks" .boolean} *FollowLinks*
+: Sets whether to follow links or not
+
+{:id="FaLABWV.FontSize" .number .bo} *FontSize*
+: Sets the default font size of text. The default is 16.
+
+{:id="FaLABWV.IgnoreSslErrors" .boolean} *IgnoreSslErrors*
+: Determine whether or not to ignore SSL errors. Set to true to ignore errors. Use this to accept self signed certificates from websites
+
+{:id="FaLABWV.InitialScale" .number .wo .bo} *InitialScale*
+: Sets the initial scale for active WebView. 0 means default. If initial scale is greater than 0, WebView starts with this value as initial scale.
+
+{:id="FaLABWV.LayerType" .number .bo} *LayerType*
+: Property for LayerType
+
+{:id="FaLABWV.LoadWithOverviewMode" .boolean .bo} *LoadWithOverviewMode*
+: Sets whether the WebView loads pages in overview mode, that is, zooms out the content to fit on screen by width. This setting is taken into account when the content width is greater than the width of the WebView control.
+
+{:id="FaLABWV.LongClickable" .boolean} *LongClickable*
+: Sets whether to enable text selection and context menu
+
+{:id="FaLABWV.OverScrollMode" .number .bo} *OverScrollMode*
+: Property for OverScrollMode
+
+{:id="FaLABWV.PromptForPermission" .boolean} *PromptForPermission*
+: Sets whether webview will prompt for permission and raise 'OnPermissionRequest' event or not else assume permission is granted.
+
+{:id="FaLABWV.RotationAngle" .number .bo} *RotationAngle*
+: Property for RotationAngle
+
+{:id="FaLABWV.ScrollBar" .boolean .wo .bo} *ScrollBar*
+: Whether to display horizonatal and vertical scrollbars or not
+
+{:id="FaLABWV.ScrollBarStyle" .number .bo} *ScrollBarStyle*
+: Property for ScrollBarStyle
+
+{:id="FaLABWV.UseWideViewPort" .boolean .bo} *UseWideViewPort*
+: Sets whether the WebView should enable support for the 'viewport' HTML meta tag or should use a wide viewport.
+
+{:id="FaLABWV.UserAgent" .text .bo} *UserAgent*
+: Sets the WebView's user-agent string. If the string is null or empty, the system default value will be used.
+
+{:id="FaLABWV.UsesLocation" .boolean .wo} *UsesLocation*
+: Whether or not to give the application permission to use the Javascript geolocation API
+
+{:id="FaLABWV.Visible" .boolean .ro .bo} *Visible*
+: Returns the visibility of current webview
+
+{:id="FaLABWV.WebViewString" .text .bo} *WebViewString*
+: Set webview string
+
+{:id="FaLABWV.ZoomEnabled" .boolean} *ZoomEnabled*
+: Sets whether the WebView should support zooming using its on-screen zoom controls and gestures
+
+{:id="FaLABWV.ZoomPercent" .number} *ZoomPercent*
+: Sets the zoom of the page in percent. The default is 100
+
+### Events  {#FaLABWV-Events}
+
+{:.events}
+
+{:id="FaLABWV.AfterArchiveSaved"} AfterArchiveSaved(*success*{:.boolean},*filePath*{:.text})
+: Event raised after 'SaveArchive' method.If 'success' is true then returns file path else empty string.
+
+{:id="FaLABWV.AfterJavaScriptEvaluated"} AfterJavaScriptEvaluated(*result*{:.text})
+: Event raised after evaluating Js and returns result.
+
+{:id="FaLABWV.CookiesRemoved"} CookiesRemoved(*successful*{:.boolean})
+: Event raised after 'ClearCokies' method with result
+
+{:id="FaLABWV.FileUploadNeeded"} FileUploadNeeded(*mimeType*{:.text},*isCaptureEnabled*{:.boolean})
+: Event raised when file uploading is needed
+
+{:id="FaLABWV.FindResultReceived"} FindResultReceived(*activeMatchOrdinal*{:.number},*numberOfMatches*{:.number},*isDoneCounting*{:.boolean})
+: Event raised after 'Find' method with int 'activeMatchOrdinal','numberOfMatches' and 'isDoneCounting'
+
+{:id="FaLABWV.GotCertificate"} GotCertificate(*isSecure*{:.boolean},*issuedBy*{:.text},*issuedTo*{:.text},*validTill*{:.text})
+: Event raised after getting SSL certificate of current displayed url/website with boolean 'isSecure' and Strings 'issuedBy','issuedTo' and 'validTill'.If 'isSecure' is false and other values are empty then assume that website is not secure
+
+{:id="FaLABWV.GotPrintResult"} GotPrintResult(*print*{:.text},*isCompleted*{:.boolean},*isFailed*{:.boolean},*isBlocked*{:.boolean})
+: Event raised after getting previus print's result.
+
+{:id="FaLABWV.LongClicked"} LongClicked(*item*{:.text},*secondaryUrl*{:.text},*type*{:.number})
+: Event raised when something is long clicked in webview with item(image,string,empty,etc) and type(item type like 0,1,8,etc)
+
+{:id="FaLABWV.OnCloseWindowRequest"} OnCloseWindowRequest()
+: Event triggered when a window needs to be closed
+
+{:id="FaLABWV.OnConsoleMessage"} OnConsoleMessage(*message*{:.text},*lineNumber*{:.number},*source*{:.number},*level*{:.text})
+: Event raised after getting console message.
+
+{:id="FaLABWV.OnDownloadNeeded"} OnDownloadNeeded(*url*{:.text},*contentDisposition*{:.text},*mimeType*{:.text},*size*{:.number})
+: Event raised when downloading is needed.
+
+{:id="FaLABWV.OnErrorReceived"} OnErrorReceived(*message*{:.text},*errorCode*{:.number},*url*{:.text})
+: Event raised when any error is received during loading url and returns message,error code and failing url
+
+{:id="FaLABWV.OnFormResubmission"} OnFormResubmission()
+: Event raised when resubmission of form is needed
+
+{:id="FaLABWV.OnHideCustomView"} OnHideCustomView()
+: Event raised when current page exits from full screen mode
+
+{:id="FaLABWV.OnJsAlert"} OnJsAlert(*url*{:.text},*message*{:.text})
+: Event raised when Js have to show an alert to user
+
+{:id="FaLABWV.OnJsConfirm"} OnJsConfirm(*url*{:.text},*message*{:.text})
+: Tells to display a confirm dialog to the user.
+
+{:id="FaLABWV.OnJsPrompt"} OnJsPrompt(*url*{:.text},*message*{:.text},*defaultValue*{:.text})
+: Event raised when JavaScript needs input from user
+
+{:id="FaLABWV.OnNewWindowRequest"} OnNewWindowRequest(*url*{:.text},*isDialog*{:.boolean},*isPopup*{:.boolean})
+: Event raised when new window is requested by webview with boolean 'isDialog' and 'isPopup'
+
+{:id="FaLABWV.OnPermissionRequest"} OnPermissionRequest(*permissionsList*{:.list})
+: Event raised when a website asks for specific permission(s) in list format.
+
+{:id="FaLABWV.OnProgressChanged"} OnProgressChanged(*progress*{:.number})
+: Event raised when page loading progress has changed.
+
+{:id="FaLABWV.OnReceivedHttpAuthRequest"} OnReceivedHttpAuthRequest(*host*{:.text},*realm*{:.text})
+: Notifies that the WebView received an HTTP authentication request.
+
+{:id="FaLABWV.OnScrollChanged"} OnScrollChanged(*scrollX*{:.number},*scrollY*{:.number},*oldScrollX*{:.number},*oldScrollY*{:.number},*canGoLeft*{:.boolean},*canGoRight*{:.boolean})
+: Event raised when webview gets scrolled
+
+{:id="FaLABWV.OnShowCustomView"} OnShowCustomView()
+: Event raised when current page enters in full screen mode
+
+{:id="FaLABWV.PageLoaded"} PageLoaded()
+: Event raised when page loading has finished.
+
+{:id="FaLABWV.PageStarted"} PageStarted(*url*{:.text})
+: Event indicating that page loading has started in web view.
+
+{:id="FaLABWV.WebViewStringChanged"} WebViewStringChanged(*value*{:.text})
+: When the JavaScript calls AppInventor.setWebViewString this event is run.
+
+### Methods  {#FaLABWV-Methods}
+
+{:.methods}
+
+{:id="FaLABWV.CanGoBack" class="method returns boolean"} <i/> CanGoBack()
+: Gets whether this WebView has a back history item
+
+{:id="FaLABWV.CanGoBackOrForward" class="method returns boolean"} <i/> CanGoBackOrForward(*steps*{:.number})
+: Gets whether the page can go back or forward the given number of steps.
+
+{:id="FaLABWV.CanGoForward" class="method returns boolean"} <i/> CanGoForward()
+: Gets whether this WebView has a forward history item.
+
+{:id="FaLABWV.CancelPrinting" class="method"} <i/> CancelPrinting()
+: Cancels current print job. You can request cancellation of a queued, started, blocked, or failed print job.
+
+{:id="FaLABWV.ClearCache" class="method"} <i/> ClearCache()
+: Clears the resource cache.
+
+{:id="FaLABWV.ClearCookies" class="method"} <i/> ClearCookies()
+: Removes all cookies and raises 'CookiesRemoved' event
+
+{:id="FaLABWV.ClearInternalHistory" class="method"} <i/> ClearInternalHistory()
+: Tells this WebView to clear its internal back/forward list.
+
+{:id="FaLABWV.ClearLocation" class="method"} <i/> ClearLocation()
+: Clear all location preferences.
+
+{:id="FaLABWV.ClearMatches" class="method"} <i/> ClearMatches()
+: Clears the highlighting surrounding text matches.
+
+{:id="FaLABWV.ConfirmJs" class="method"} <i/> ConfirmJs(*confirm*{:.boolean})
+: Whether to proceed JavaScript originated request
+
+{:id="FaLABWV.ContentHeight" class="method returns number"} <i/> ContentHeight()
+: Gets height of HTML content
+
+{:id="FaLABWV.ContinueJs" class="method"} <i/> ContinueJs(*input*{:.text})
+: Inputs a confirmation response to Js
+
+{:id="FaLABWV.CreateShortcut" class="method"} <i/> CreateShortcut(*url*{:.text},*iconPath*{:.text},*title*{:.text})
+: Creates a shortcut of given website on home screen
+
+{:id="FaLABWV.DismissJsAlert" class="method"} <i/> DismissJsAlert()
+: Dismiss previously requested Js alert
+
+{:id="FaLABWV.Download" class="method"} <i/> Download(*url*{:.text},*mimeType*{:.text},*contentDisposition*{:.text},*fileName*{:.text},*downloadDir*{:.text})
+: Downloads the given file
+
+{:id="FaLABWV.EvaluateJavaScript" class="method"} <i/> EvaluateJavaScript(*script*{:.text})
+: Asynchronously evaluates JavaScript in the context of the currently displayed page.
+
+{:id="FaLABWV.Find" class="method"} <i/> Find(*string*{:.text})
+: Finds all instances of find on the page and highlights them, asynchronously. Successive calls to this will cancel any pending searches.
+
+{:id="FaLABWV.FindNext" class="method"} <i/> FindNext(*forward*{:.boolean})
+: Highlights and scrolls to the next match if 'forward' is true else scrolls to previous match.
+
+{:id="FaLABWV.GetCookies" class="method returns text"} <i/> GetCookies(*url*{:.text})
+: Get cookies for specific url
+
+{:id="FaLABWV.GetScrollX" class="method returns number"} <i/> GetScrollX()
+: Return the scrolled left position of the webview
+
+{:id="FaLABWV.GetScrollY" class="method returns number"} <i/> GetScrollY()
+: Return the scrolled top position of the webview
+
+{:id="FaLABWV.GetSslCertificate" class="method"} <i/> GetSslCertificate()
+: Gets the SSL certificate for the main top-level page and raises 'GotCertificate' event
+
+{:id="FaLABWV.GoBack" class="method"} <i/> GoBack()
+: Goes back in the history of this WebView.
+
+{:id="FaLABWV.GoBackOrForward" class="method"} <i/> GoBackOrForward(*steps*{:.number})
+: Goes to the history item that is the number of steps away from the current item. Steps is negative if backward and positive if forward.
+
+{:id="FaLABWV.GoForward" class="method"} <i/> GoForward()
+: Goes forward in the history of this WebView.
+
+{:id="FaLABWV.GoToUrl" class="method"} <i/> GoToUrl(*url*{:.text})
+: Loads the given URL.
+
+{:id="FaLABWV.GrantPermission" class="method"} <i/> GrantPermission(*permissions*{:.list})
+: Grants given permissions to webview.Use empty list to deny the request.
+
+{:id="FaLABWV.HideCustomView" class="method"} <i/> HideCustomView()
+: Hides previously shown custom view
+
+{:id="FaLABWV.InitWebView" class="method"} <i/> InitWebView(*container*{:.component})
+: Creates the webview in given arrangement with id
+
+{:id="FaLABWV.InvokeZoomPicker" class="method"} <i/> InvokeZoomPicker()
+: Invokes the graphical zoom picker widget for this WebView. This will result in the zoom widget appearing on the screen to control the zoom level of this WebView.Note that it does not checks whether zoom is enabled or not.
+
+{:id="FaLABWV.LoadHtml" class="method"} <i/> LoadHtml(*html*{:.text})
+: Loads the given data into this WebView using a 'data' scheme URL.
+
+{:id="FaLABWV.LoadWithHeaders" class="method"} <i/> LoadWithHeaders(*url*{:.text},*headers*{:.list})
+: Loads the given URL with the specified additional HTTP headers defined is list of lists.
+
+{:id="FaLABWV.PageDown" class="method"} <i/> PageDown(*bottom*{:.boolean})
+: Scrolls the contents of the WebView down by half the page size
+
+{:id="FaLABWV.PageUp" class="method"} <i/> PageUp(*top*{:.boolean})
+: Scrolls the contents of the WebView up by half the page size
+
+{:id="FaLABWV.PauseWebView" class="method"} <i/> PauseWebView()
+: Does a best-effort attempt to pause any processing that can be paused safely, such as animations and geolocation. Note that this call does not pause JavaScript.
+
+{:id="FaLABWV.PostData" class="method"} <i/> PostData(*url*{:.text},*data*{:.text})
+: Loads the URL with postData using 'POST' method into active WebView.
+
+{:id="FaLABWV.PrintWebContent" class="method"} <i/> PrintWebContent(*documentName*{:.text})
+: Prints the content of webview with given document name
+
+{:id="FaLABWV.ProceedHttpAuthRequest" class="method"} <i/> ProceedHttpAuthRequest(*username*{:.text},*password*{:.text})
+: Instructs the WebView to proceed with the authentication with the given credentials.If both parameters are empty then it will cancel the request.
+
+{:id="FaLABWV.Reload" class="method"} <i/> Reload()
+: Reloads the current URL.
+
+{:id="FaLABWV.RestartPrinting" class="method"} <i/> RestartPrinting()
+: Restarts current/previous print job. You can request restart of a failed print job.
+
+{:id="FaLABWV.ResubmitForm" class="method"} <i/> ResubmitForm(*reSubmit*{:.boolean})
+: Whether to resubmit form or not.
+
+{:id="FaLABWV.ResumeWebView" class="method"} <i/> ResumeWebView(*id*{:.number})
+: Resumes the previously paused WebView.
+
+{:id="FaLABWV.SaveArchive" class="method"} <i/> SaveArchive(*dir*{:.text})
+: Saves the current site as a web archive
+
+{:id="FaLABWV.ScrollTo" class="method"} <i/> ScrollTo(*x*{:.number},*y*{:.number})
+: Scrolls the webview to given position
+
+{:id="FaLABWV.SetCookies" class="method"} <i/> SetCookies(*url*{:.text},*cookieString*{:.text})
+: Sets cookies for given url
+
+{:id="FaLABWV.SetVisibility" class="method"} <i/> SetVisibility(*visibility*{:.boolean})
+: Sets the visibility of webview by id
+
+{:id="FaLABWV.StopLoading" class="method"} <i/> StopLoading()
+: Stops the current load.
+
+{:id="FaLABWV.UploadFile" class="method"} <i/> UploadFile(*contentUri*{:.text})
+: Uploads the given file from content uri.Use empty string to cancel the upload request.
+
+{:id="FaLABWV.ZoomBy" class="method"} <i/> ZoomBy(*zoomP*{:.number})
+: Performs a zoom operation in the WebView by given zoom percent
+
+{:id="FaLABWV.ZoomIn" class="method"} <i/> ZoomIn()
+: Performs zoom in in the WebView
+
+{:id="FaLABWV.ZoomOut" class="method"} <i/> ZoomOut()
+: Performs zoom out in the WebView
 
 ## Image  {#Image}
 
