@@ -1,34 +1,33 @@
 package com.falab.atp;
 
 import java.net.InetAddress;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import com.google.appinventor.components.annotations.DesignerComponent;
-import com.google.appinventor.components.annotations.DesignerProperty;
-import com.google.appinventor.components.annotations.PropertyCategory;
-import com.google.appinventor.components.annotations.SimpleEvent;
 import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleObject;
-import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.annotations.UsesPermissions;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.ComponentConstants;
-import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.runtime.AndroidNonvisibleComponent;
 import com.google.appinventor.components.runtime.AndroidViewComponent;
 import com.google.appinventor.components.runtime.ButtonBase;
 import com.google.appinventor.components.runtime.CheckBox;
 import com.google.appinventor.components.runtime.Component;
 import com.google.appinventor.components.runtime.ComponentContainer;
-import com.google.appinventor.components.runtime.EventDispatcher;
 import com.google.appinventor.components.runtime.HVArrangement;
 import com.google.appinventor.components.runtime.Label;
 import com.google.appinventor.components.runtime.Notifier;
+import com.google.appinventor.components.runtime.Spinner;
 import com.google.appinventor.components.runtime.Switch;
 import com.google.appinventor.components.runtime.VerticalArrangement;
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
+import com.google.appinventor.components.runtime.util.YailList;
 
 import android.content.Context;
 import android.os.Handler;
@@ -41,37 +40,24 @@ import android.widget.LinearLayout.LayoutParams;
 @UsesPermissions(permissionNames = "android.permission.INTERNET," + "android.permission.WRITE_EXTERNAL_STORAGE,"
 		+ "android.permission.READ_EXTERNAL_STORAGE," + "android.permission.CHANGE_WIFI_MULTICAST_STATE,"
 		+ "android.permission.ACCESS_WIFI_STATE," + "android.permission.ACCESS_NETWORK_STATE")
-public final class ATP extends AndroidNonvisibleComponent implements UDPEventListener, ViewListener.Button<ATPNode> {
+public final class ATP extends AndroidNonvisibleComponent implements ViewListener.Button<ATPNode>, UDPJob.UDPEvent {
 
 	private final ComponentContainer mContainer;
 	private final Context mContext;
 	private final Handler mHandler = new Handler();
-	private final List<ATPNode> mNodes = new LinkedList<>();
-	private final List<String> mJobQueue = new LinkedList<>();
 
+	private final Random mRandom = new Random();
+	private final Set<String> mIPs = new HashSet<>();
+	private final Map<String, ATPNode> mNodes = new HashMap<>();
+	private RUDP mRUDP = null;
 	private HVArrangement mLayout = null;
 	private Notifier mNotifier = null;
-
-	private int UDP_TIMEOUT;
-	private int UDP_RETRY;
-	private int UDP_INTERVAL;
-	private int UDP_MOSI;
-	private int UDP_MISO;
 
 	public ATP(ComponentContainer container) {
 		super(container.$form());
 		mContainer = container;
 		mContext = container.$context();
-	}
-
-	private synchronized String _job_create() {
-		String job_id = UUID.randomUUID().toString();
-		mJobQueue.add(job_id);
-		return job_id;
-	}
-
-	private synchronized boolean _job_finish(String job_id) {
-		return mJobQueue.remove(job_id);
+		mRUDP = new RUDP();
 	}
 
 	private void _layout_init() {
@@ -93,7 +79,7 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 		boolean isStart = true;
 
 		/* Body */
-		for (ATPNode node : mNodes) {
+		for (ATPNode node : mNodes.values()) {
 			itemRoot = new VerticalArrangement(mLayout);
 			itemRoot.Width(Component.LENGTH_FILL_PARENT);
 			itemRoot.Height(Component.LENGTH_PREFERRED);
@@ -138,6 +124,16 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 			node.view_ChkBox.Enabled(false);
 			node.view_ChkBox.Checked(false);
 
+			node.view_Spinner = _view_add_spinner(itemRoot);
+			node.view_Spinner.ElementsFromString("시나리오 선택");
+			node.view_Spinner.SelectionIndex(1);
+			node.view_Spinner.WidthPercent(98);
+			node.view_Spinner.Height(Component.LENGTH_PREFERRED);
+			lp = _view_get_lp(node.view_Spinner);
+			lp.topMargin = 15;
+			lp.bottomMargin = 15;
+			_view_set_lp(node.view_Spinner, lp);
+
 			line = _view_add_arrangement(itemRoot, ComponentConstants.LAYOUT_ORIENTATION_HORIZONTAL);
 			line.Width(Component.LENGTH_FILL_PARENT);
 			line.Height(Component.LENGTH_PREFERRED);
@@ -147,21 +143,28 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 			_view_set_lp(line, lp);
 
 			/* Button 1 */
-			btn = _view_add_button(line, "btn1", "이름 변경", node, ATP.this);
+			btn = _view_add_button(line, "btn1", "불러오기", node, ATP.this);
 			lp = _view_get_lp(btn);
 			lp.leftMargin = 5;
 			lp.rightMargin = 5;
 			_view_set_lp(btn, lp);
 
 			/* Button 2 */
-			btn = _view_add_button(line, "btn2", "이름 변경", node, ATP.this);
+			btn = _view_add_button(line, "btn2", "준비", node, ATP.this);
 			lp = _view_get_lp(btn);
 			lp.leftMargin = 5;
 			lp.rightMargin = 5;
 			_view_set_lp(btn, lp);
 
 			/* Button 3 */
-			btn = _view_add_button(line, "btn3", "이름 변경", node, ATP.this);
+			btn = _view_add_button(line, "btn3", "시작", node, ATP.this);
+			lp = _view_get_lp(btn);
+			lp.leftMargin = 5;
+			lp.rightMargin = 5;
+			_view_set_lp(btn, lp);
+
+			/* Button 4 */
+			btn = _view_add_button(line, "btn4", "삭제", node, ATP.this);
 			lp = _view_get_lp(btn);
 			lp.leftMargin = 5;
 			lp.rightMargin = 5;
@@ -187,13 +190,13 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 		return ar;
 	}
 
-	private ButtonBase _view_add_button(ComponentContainer container, final String id, String text, final ATPNode node,
-			final ViewListener.Button<ATPNode> listener) {
+	private ButtonBase _view_add_button(ComponentContainer container, final String btn_id, String text,
+			final ATPNode node, final ViewListener.Button<ATPNode> listener) {
 		ButtonBase btn = new ButtonBase(container) {
 
 			@Override
 			public void click() {
-				listener.click(id, node);
+				listener.click(this, btn_id, node);
 			}
 
 		};
@@ -212,6 +215,21 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 		return lb;
 	}
 
+	private Spinner _view_add_spinner(ComponentContainer container) {
+		AndroidViewComponent ss = new AndroidViewComponent(container) {
+
+			@Override
+			public View getView() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+		};
+
+		Spinner sp = new Spinner(container);
+		return sp;
+	}
+
 	private Switch _view_add_switch(ComponentContainer container) {
 		Switch sw = new Switch(container);
 		return sw;
@@ -227,39 +245,50 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 	}
 
 	@Override
-	public void click(String id, ATPNode obj) {
-		mNotifier.ShowTextDialog(obj.name, id, false);
+	public void click(ButtonBase btn, String btn_id, ATPNode node) {
+		if (btn_id == "btn1") {
+			node.scenarios.clear();
+			mNotifier.ShowProgressDialog("불러오기", "시나리오를 불러옵니다.");
+
+			UDPJob udpjob = new UDPJob(this);
+			udpjob.send_data = ("ldsc0").getBytes();
+			udpjob.target_addr = node.addr;
+			mRUDP.send("ldsc", udpjob);
+		} else if (btn_id == "btn2") {
+			int select = node.view_Spinner.SelectionIndex() - 2;
+			if (select < 0) {
+				mNotifier.ShowTextDialog("시나리오가 선택되지 않았습니다.", "에러", false);
+			} else {
+				mNotifier.ShowProgressDialog("불러오기", "시나리오를 불러옵니다.");
+				UDPJob udpjob = new UDPJob(this);
+				udpjob.send_data = ("stsc" + node.view_Spinner.Selection()).getBytes();
+				udpjob.target_addr = node.addr;
+				mRUDP.send("stsc", udpjob);
+			}
+		}
 	}
 
 	@SimpleFunction
-	public void Func_findNode(HVArrangement layout) throws YailRuntimeError {
+	public void Func_findNode() throws YailRuntimeError, UnknownHostException {
 		if (mLayout == null) {
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
+		mIPs.clear();
 		mNotifier.ShowProgressDialog("노드를 찾고있습니다.", "알림");
-		final String job_id = _job_create();
-		mHandler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				if (_job_finish(job_id)) {
-					Func_findNode_evt();
-				}
-			}
-		}, UDP_TIMEOUT);
-	}
 
-	@SimpleEvent
-	public void Func_findNode_evt() {
-		_layout_init();
-		mNotifier.DismissProgressDialog();
-		EventDispatcher.dispatchEvent(this, "Func_findNode_evt");
+		UDPJob udpjob = new UDPJob(this);
+		udpjob.send_data = "find".getBytes();
+		udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+		udpjob.single_response = false;
+		udpjob.send_broadcast = true;
+		udpjob.max_retries = 2;
+
+		mRUDP.send("find", udpjob);
 	}
 
 	@SimpleFunction
 	public void Func_init(HVArrangement layout, Notifier notifier) throws YailRuntimeError {
 		if (mLayout != null) {
-			mNodes.clear();
-			mJobQueue.clear();
 			mNotifier.DismissProgressDialog();
 			return;
 		}
@@ -268,54 +297,114 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 		}
 		mLayout = layout;
 		mNotifier = notifier;
-		UDPHelper.startServer(UDP_MISO, this);
-	}
-
-	@SimpleFunction
-	public void Func_test() throws YailRuntimeError {
-		mNodes.clear();
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		mNodes.add(new ATPNode());
-		_layout_init();
 	}
 
 	@Override
-	public void onPacket(InetAddress clientAddress, byte[] data, int length) {
-		// TODO Auto-generated method stub
+	public void response(String jobName, long elapsed, String ipv4, final byte[] data) {
+		if (jobName.equals("find")) {
+			if (data == null) {
+				mNodes.clear();
+				for (String ip : mIPs) {
+					try {
+						ATPNode node = new ATPNode();
+						node.ipv4 = ip;
+						node.addr = InetAddress.getByName(node.ipv4);
 
-	}
-
-	@DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_INTEGER, defaultValue = "500", alwaysSend = true)
-	@SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
-	public void UDP_INTERVAL(int i) {
-		if (i >= 0) {
-			UDP_INTERVAL = i;
-		}
-	}
-
-	@DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_INTEGER, defaultValue = "3334", alwaysSend = true)
-	@SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
-	public void UDP_MISO(int i) {
-		if (i >= 1000) {
-			UDP_MISO = i;
-		}
-	}
-
-	@DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_INTEGER, defaultValue = "3333", alwaysSend = true)
-	@SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
-	public void UDP_MOSI(int i) {
-		if (i >= 1000) {
-			UDP_MOSI = i;
+						UDPJob udpjob = new UDPJob(this);
+						udpjob.send_data = "name".getBytes();
+						udpjob.target_addr = node.addr;
+						mRUDP.send("name", udpjob);
+						mNodes.put(ip, node);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				mHandler.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						_layout_init();
+						mNotifier.DismissProgressDialog();
+					}
+				}, RUDP.UDP_READ_TIMEOUT);
+			} else {
+				mIPs.add(ipv4);
+			}
+		} else if (jobName.equals("name")) {
+			if (data != null) {
+				ATPNode node = mNodes.get(ipv4);
+				if (node != null) {
+					node.name = new String(data) + " [" + String.valueOf(elapsed) + "]";
+				}
+			}
+		} else if (jobName.equals("ldsc")) {
+			if (data != null) {
+				if (data.length == 0) {
+					// No more data;
+					final ATPNode node = mNodes.get(ipv4);
+					mHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							Spinner sp = node.view_Spinner;
+							String[] rr = new String[node.scenarios.size() + 1];
+							rr[0] = "시나리오 선택";
+							for (int i = 0; i < node.scenarios.size(); i++) {
+								rr[i + 1] = node.scenarios.get(i);
+							}
+							sp.Elements(YailList.makeList(rr));
+							mNotifier.DismissProgressDialog();
+						}
+					});
+				} else {
+					ATPNode node = mNodes.get(ipv4);
+					String scenarios = new String(data);
+					String[] tmp = scenarios.split(",");
+					for (String scenario : tmp) {
+						node.scenarios.add(scenario);
+					}
+					UDPJob udpjob = new UDPJob(this);
+					udpjob.send_data = ("ldsc" + node.scenarios.size()).getBytes();
+					udpjob.target_addr = node.addr;
+					mRUDP.send("ldsc", udpjob);
+				}
+			} else {
+				mHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						mNotifier.DismissProgressDialog();
+					}
+				});
+			}
+		} else if (jobName.equals("stsc")) {
+			if (data != null) {
+				if (data.length == 0) {
+					// No more data;
+					final ATPNode node = mNodes.get(ipv4);
+					mHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							mNotifier.DismissProgressDialog();
+							node.view_ChkBox.Checked(true);
+						}
+					});
+				} else {
+					final ATPNode node = mNodes.get(ipv4);
+					mHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							mNotifier.DismissProgressDialog();
+							mNotifier.ShowTextDialog(new String(data), "알림", false);
+						}
+					});
+				}
+			} else {
+				mHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						mNotifier.DismissProgressDialog();
+						mNotifier.ShowTextDialog("시간 초과", "알림", false);
+					}
+				});
+			}
 		}
 	}
 
@@ -622,17 +711,4 @@ public final class ATP extends AndroidNonvisibleComponent implements UDPEventLis
 //		UDPHelper.send(UDPOpCode.START_NODE, "255.255.255.255", UDP_MOSI, true);
 //	}
 
-	@DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_INTEGER, defaultValue = "3", alwaysSend = true)
-	@SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
-	public void UDP_RETRY(int i) {
-		if (i >= 0) {
-			UDP_RETRY = i;
-		}
-	}
-
-	@DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_INTEGER, defaultValue = "3000", alwaysSend = true)
-	@SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
-	public void UDP_TIMEOUT(int i) {
-		UDP_TIMEOUT = i;
-	}
 }
