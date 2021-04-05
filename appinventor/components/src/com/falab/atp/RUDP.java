@@ -74,17 +74,17 @@ public final class RUDP implements Runnable {
 		new Thread(this).start();
 	}
 
-	public void onPacket(InetAddress clientAddress, byte[] data, int length) {
-		if (length >= 4) {
-			String jobName = new String(data, 0, 4);
-			UDPJob j = registred_jobs.get(jobName);
+	public void onPacket(InetAddress clientAddress, final byte[] data, final int length) {
+		if (length >= 3 && data[length - 1] == OpCode.OPCODE_EOL_CHAR) {
+			String opCode = new String(data, 0, 2);
+			UDPJob j = registred_jobs.get(opCode);
 
 			if (j != null) {
 				if (j.single_response) {
-					registred_jobs.remove(jobName);
+					registred_jobs.remove(opCode);
 				}
-				j.func.response(jobName, System.currentTimeMillis() - j.t_init, clientAddress.getHostAddress(),
-						Arrays.copyOfRange(data, 4, length));
+				j.func.response(opCode, System.currentTimeMillis() - j.t_init, clientAddress.getHostAddress(),
+						Arrays.copyOfRange(data, 2, length - 1));
 			}
 		}
 	}
@@ -104,9 +104,16 @@ public final class RUDP implements Runnable {
 						registred_jobs.remove(jobName);
 						j.func.response(jobName, 0, null, null);
 					} else if (current_t > (j.t_last + RUDP.UDP_RESEND_INTERVAL) && j.cnt < j.max_retries) {
+						if (j.with_offset) {
+							String offsetStr = new String(j.send_data);
+							offsetStr = offsetStr + String.valueOf(RUDP.UDP_RESEND_INTERVAL * j.cnt) + ";";
+							udp_send(offsetStr.getBytes(), j.target_addr, j.send_broadcast);
+						} else {
+							udp_send(j.send_data, j.target_addr, j.send_broadcast);
+						}
 						j.t_last = current_t;
 						j.cnt++;
-						udp_send(j.send_data, j.target_addr, j.send_broadcast);
+
 					}
 				}
 			}

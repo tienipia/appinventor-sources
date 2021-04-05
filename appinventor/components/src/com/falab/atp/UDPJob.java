@@ -12,6 +12,8 @@ public class UDPJob {
 		TIMEOUT, DATA;
 	}
 
+	public boolean with_offset = false;
+
 	public byte[] send_data = null;
 	public boolean send_broadcast = false;
 	public InetAddress target_addr;

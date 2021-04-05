@@ -43,15 +43,16 @@ import android.widget.LinearLayout.LayoutParams;
 public final class ATP extends AndroidNonvisibleComponent implements ViewListener.Button<ATPNode>, UDPJob.UDPEvent {
 
 	private final ComponentContainer mContainer;
+
 	private final Context mContext;
 	private final Handler mHandler = new Handler();
-
 	private final Random mRandom = new Random();
 	private final Set<String> mIPs = new HashSet<>();
 	private final Map<String, ATPNode> mNodes = new HashMap<>();
+	private Notifier mNotifier = null;
 	private RUDP mRUDP = null;
 	private HVArrangement mLayout = null;
-	private Notifier mNotifier = null;
+	private boolean is_layout_init = false;
 
 	public ATP(ComponentContainer container) {
 		super(container.$form());
@@ -164,7 +165,7 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			_view_set_lp(btn, lp);
 
 			/* Button 4 */
-			btn = _view_add_button(line, "btn4", "삭제", node, ATP.this);
+			btn = _view_add_button(line, "btn4", "정지", node, ATP.this);
 			lp = _view_get_lp(btn);
 			lp.leftMargin = 5;
 			lp.rightMargin = 5;
@@ -178,7 +179,10 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			lp.topMargin = 15;
 			lp.bottomMargin = 15;
 			_view_set_lp(wrap, lp);
+
+			node.init = true;
 		}
+		is_layout_init = true;
 	}
 
 	public HVArrangement _view_add_arrangement(ComponentContainer container) {
@@ -201,6 +205,8 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 
 		};
 		btn.Text(text);
+		btn.Enabled(false);
+		node.view_buttons.put(btn_id, btn);
 		return btn;
 	}
 
@@ -251,9 +257,9 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			mNotifier.ShowProgressDialog("불러오기", "시나리오를 불러옵니다.");
 
 			UDPJob udpjob = new UDPJob(this);
-			udpjob.send_data = ("ldsc0").getBytes();
+			udpjob.send_data = (OpCode.OPCODE_SCENARIO_GET + "0;").getBytes();
 			udpjob.target_addr = node.addr;
-			mRUDP.send("ldsc", udpjob);
+			mRUDP.send(OpCode.OPCODE_SCENARIO_GET, udpjob);
 		} else if (btn_id == "btn2") {
 			int select = node.view_Spinner.SelectionIndex() - 2;
 			if (select < 0) {
@@ -261,10 +267,28 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			} else {
 				mNotifier.ShowProgressDialog("불러오기", "시나리오를 불러옵니다.");
 				UDPJob udpjob = new UDPJob(this);
-				udpjob.send_data = ("stsc" + node.view_Spinner.Selection()).getBytes();
+				udpjob.send_data = (OpCode.OPCODE_SCENARIO_LOAD + node.view_Spinner.Selection() + ";").getBytes();
 				udpjob.target_addr = node.addr;
-				mRUDP.send("stsc", udpjob);
+				mRUDP.send(OpCode.OPCODE_SCENARIO_LOAD, udpjob);
 			}
+		} else if (btn_id == "btn3") {
+			int select = node.view_Spinner.SelectionIndex() - 2;
+			if (select < 0) {
+				mNotifier.ShowTextDialog("시나리오가 선택되지 않았습니다.", "에러", false);
+			} else {
+				UDPJob udpjob = new UDPJob(this);
+				udpjob.send_data = (OpCode.OPCODE_START).getBytes();
+				udpjob.target_addr = node.addr;
+				udpjob.with_offset = true;
+				mRUDP.send(OpCode.OPCODE_START, udpjob);
+			}
+		} else if (btn_id == "btn4") {
+
+			UDPJob udpjob = new UDPJob(this);
+			udpjob.send_data = (OpCode.OPCODE_STOP + ";").getBytes();
+			udpjob.target_addr = node.addr;
+			mRUDP.send(OpCode.OPCODE_STOP, udpjob);
+
 		}
 	}
 
@@ -273,17 +297,18 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 		if (mLayout == null) {
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
+		is_layout_init = false;
 		mIPs.clear();
 		mNotifier.ShowProgressDialog("노드를 찾고있습니다.", "알림");
 
 		UDPJob udpjob = new UDPJob(this);
-		udpjob.send_data = "find".getBytes();
+		udpjob.send_data = (OpCode.OPCODE_FIND + ";").getBytes();
 		udpjob.target_addr = InetAddress.getByName("255.255.255.255");
 		udpjob.single_response = false;
 		udpjob.send_broadcast = true;
 		udpjob.max_retries = 2;
 
-		mRUDP.send("find", udpjob);
+		mRUDP.send(OpCode.OPCODE_FIND, udpjob);
 	}
 
 	@SimpleFunction
@@ -297,11 +322,65 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 		}
 		mLayout = layout;
 		mNotifier = notifier;
+
+	}
+
+	@SimpleFunction
+	public void Func_StartAllNode() throws YailRuntimeError, UnknownHostException {
+		if (mLayout == null) {
+			throw new YailRuntimeError("Not Init", "[IGN]");
+		}
+		if (is_layout_init) {
+			UDPJob udpjob = new UDPJob(this);
+			udpjob.send_data = (OpCode.OPCODE_START).getBytes();
+			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+			udpjob.single_response = false;
+			udpjob.with_offset = true;
+			udpjob.send_broadcast = true;
+			udpjob.max_retries = 2;
+			mRUDP.send(OpCode.OPCODE_START, udpjob);
+		}
+	}
+
+	@SimpleFunction
+	public void Func_StopAllNode() throws YailRuntimeError, UnknownHostException {
+		if (mLayout == null) {
+			throw new YailRuntimeError("Not Init", "[IGN]");
+		}
+		if (is_layout_init) {
+			UDPJob udpjob = new UDPJob(this);
+			udpjob.send_data = (OpCode.OPCODE_STOP + ";").getBytes();
+			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+			udpjob.single_response = false;
+			udpjob.send_broadcast = true;
+			udpjob.max_retries = 2;
+			mRUDP.send(OpCode.OPCODE_STOP, udpjob);
+		}
+	}
+
+	@SimpleFunction
+	public void Func_updateNode() throws YailRuntimeError, UnknownHostException {
+		if (mLayout == null) {
+			throw new YailRuntimeError("Not Init", "[IGN]");
+		}
+
+		if (is_layout_init) {
+
+			UDPJob udpjob = new UDPJob(this);
+			udpjob.send_data = (OpCode.OPCODE_INFO + ";").getBytes();
+			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+			udpjob.single_response = false;
+			udpjob.send_broadcast = true;
+			udpjob.max_retries = 1;
+
+			mRUDP.send(OpCode.OPCODE_INFO, udpjob);
+		}
+
 	}
 
 	@Override
-	public void response(String jobName, long elapsed, String ipv4, final byte[] data) {
-		if (jobName.equals("find")) {
+	public void response(String opCode, long elapsed, String ipv4, final byte[] data) {
+		if (opCode.equals(OpCode.OPCODE_FIND)) {
 			if (data == null) {
 				mNodes.clear();
 				for (String ip : mIPs) {
@@ -311,9 +390,9 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 						node.addr = InetAddress.getByName(node.ipv4);
 
 						UDPJob udpjob = new UDPJob(this);
-						udpjob.send_data = "name".getBytes();
+						udpjob.send_data = (OpCode.OPCODE_GET_DATA + "atpname;").getBytes();
 						udpjob.target_addr = node.addr;
-						mRUDP.send("name", udpjob);
+						mRUDP.send(OpCode.OPCODE_GET_DATA, udpjob);
 						mNodes.put(ip, node);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -329,14 +408,73 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			} else {
 				mIPs.add(ipv4);
 			}
-		} else if (jobName.equals("name")) {
-			if (data != null) {
-				ATPNode node = mNodes.get(ipv4);
-				if (node != null) {
-					node.name = new String(data) + " [" + String.valueOf(elapsed) + "]";
+		} else if (opCode.equals(OpCode.OPCODE_INFO)) {
+			if (data != null && data.length == 1) {
+				final ATPNode node = mNodes.get(ipv4);
+				if (node != null && node.init) {
+					node.elapsed = elapsed;
+					node.state = data[0];
+					if (node.view_Label != null && node.view_buttons.size() == 4) {
+						mHandler.post(new Runnable() {
+							@Override
+							public void run() {
+
+								node.view_Label.Text(node.name + " [" + String.valueOf(node.elapsed) + "]");
+
+								switch (node.state) {
+								case 'a': // STATE_INIT
+									node.view_buttons.get("btn1").Enabled(true);
+									node.view_buttons.get("btn2").Enabled(true);
+									node.view_buttons.get("btn3").Enabled(false);
+									node.view_buttons.get("btn4").Enabled(false);
+									break;
+								case 'b': // STATE_REQUEST_SCENARIO
+									node.view_buttons.get("btn1").Enabled(false);
+									node.view_buttons.get("btn2").Enabled(false);
+									node.view_buttons.get("btn3").Enabled(false);
+									node.view_buttons.get("btn4").Enabled(false);
+									break;
+								case 'c': // STATE_READY
+									node.view_buttons.get("btn1").Enabled(false);
+									node.view_buttons.get("btn2").Enabled(false);
+									node.view_buttons.get("btn3").Enabled(true);
+									node.view_buttons.get("btn4").Enabled(false);
+									break;
+								case 'd': // STATE_REQUEST_PLAY
+									node.view_buttons.get("btn1").Enabled(false);
+									node.view_buttons.get("btn2").Enabled(false);
+									node.view_buttons.get("btn3").Enabled(false);
+									node.view_buttons.get("btn4").Enabled(false);
+									break;
+								case 'e': // STATE_PLAY
+									node.view_buttons.get("btn1").Enabled(false);
+									node.view_buttons.get("btn2").Enabled(false);
+									node.view_buttons.get("btn3").Enabled(false);
+									node.view_buttons.get("btn4").Enabled(true);
+									break;
+								}
+
+							}
+						});
+					}
 				}
 			}
-		} else if (jobName.equals("ldsc")) {
+
+		} else if (opCode.equals(OpCode.OPCODE_GET_DATA)) {
+			if (data != null && data.length != 0) {
+				ATPNode node = mNodes.get(ipv4);
+				if (node != null) {
+					String strData = new String(data);
+					String[] kv = strData.split("=", 2);
+					if (kv.length == 2) {
+						if (kv[0].equals("atpname")) {
+							node.elapsed = elapsed;
+							node.name = kv[1];
+						}
+					}
+				}
+			}
+		} else if (opCode.equals(OpCode.OPCODE_SCENARIO_GET)) {
 			if (data != null) {
 				if (data.length == 0) {
 					// No more data;
@@ -362,9 +500,10 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 						node.scenarios.add(scenario);
 					}
 					UDPJob udpjob = new UDPJob(this);
-					udpjob.send_data = ("ldsc" + node.scenarios.size()).getBytes();
+					udpjob.send_data = (OpCode.OPCODE_SCENARIO_GET + String.valueOf(node.scenarios.size()) + ";")
+							.getBytes();
 					udpjob.target_addr = node.addr;
-					mRUDP.send("ldsc", udpjob);
+					mRUDP.send(OpCode.OPCODE_SCENARIO_GET, udpjob);
 				}
 			} else {
 				mHandler.post(new Runnable() {
@@ -374,7 +513,7 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 					}
 				});
 			}
-		} else if (jobName.equals("stsc")) {
+		} else if (opCode.equals(OpCode.OPCODE_SCENARIO_LOAD)) {
 			if (data != null) {
 				if (data.length == 0) {
 					// No more data;
