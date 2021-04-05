@@ -52,7 +52,6 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 	private Notifier mNotifier = null;
 	private RUDP mRUDP = null;
 	private HVArrangement mLayout = null;
-	private boolean is_layout_init = false;
 
 	public ATP(ComponentContainer container) {
 		super(container.$form());
@@ -182,7 +181,6 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 
 			node.init = true;
 		}
-		is_layout_init = true;
 	}
 
 	public HVArrangement _view_add_arrangement(ComponentContainer container) {
@@ -297,7 +295,6 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 		if (mLayout == null) {
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
-		is_layout_init = false;
 		mIPs.clear();
 		mNotifier.ShowProgressDialog("노드를 찾고있습니다.", "알림");
 
@@ -330,16 +327,15 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 		if (mLayout == null) {
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
-		if (is_layout_init) {
-			UDPJob udpjob = new UDPJob(this);
-			udpjob.send_data = (OpCode.OPCODE_START).getBytes();
-			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
-			udpjob.single_response = false;
-			udpjob.with_offset = true;
-			udpjob.send_broadcast = true;
-			udpjob.max_retries = 2;
-			mRUDP.send(OpCode.OPCODE_START, udpjob);
-		}
+		UDPJob udpjob = new UDPJob(this);
+		udpjob.send_data = (OpCode.OPCODE_START).getBytes();
+		udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+		udpjob.single_response = false;
+		udpjob.with_offset = true;
+		udpjob.send_broadcast = true;
+		udpjob.max_retries = 3;
+		mRUDP.send(OpCode.OPCODE_START, udpjob);
+
 	}
 
 	@SimpleFunction
@@ -347,15 +343,14 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 		if (mLayout == null) {
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
-		if (is_layout_init) {
-			UDPJob udpjob = new UDPJob(this);
-			udpjob.send_data = (OpCode.OPCODE_STOP + ";").getBytes();
-			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
-			udpjob.single_response = false;
-			udpjob.send_broadcast = true;
-			udpjob.max_retries = 2;
-			mRUDP.send(OpCode.OPCODE_STOP, udpjob);
-		}
+		UDPJob udpjob = new UDPJob(this);
+		udpjob.send_data = (OpCode.OPCODE_STOP + ";").getBytes();
+		udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+		udpjob.single_response = false;
+		udpjob.send_broadcast = true;
+		udpjob.max_retries = 3;
+		mRUDP.send(OpCode.OPCODE_STOP, udpjob);
+
 	}
 
 	@SimpleFunction
@@ -364,17 +359,14 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 			throw new YailRuntimeError("Not Init", "[IGN]");
 		}
 
-		if (is_layout_init) {
+		UDPJob udpjob = new UDPJob(this);
+		udpjob.send_data = (OpCode.OPCODE_INFO + ";").getBytes();
+		udpjob.target_addr = InetAddress.getByName("255.255.255.255");
+		udpjob.single_response = false;
+		udpjob.send_broadcast = true;
+		udpjob.max_retries = 1;
 
-			UDPJob udpjob = new UDPJob(this);
-			udpjob.send_data = (OpCode.OPCODE_INFO + ";").getBytes();
-			udpjob.target_addr = InetAddress.getByName("255.255.255.255");
-			udpjob.single_response = false;
-			udpjob.send_broadcast = true;
-			udpjob.max_retries = 1;
-
-			mRUDP.send(OpCode.OPCODE_INFO, udpjob);
-		}
+		mRUDP.send(OpCode.OPCODE_INFO, udpjob);
 
 	}
 
@@ -423,30 +415,35 @@ public final class ATP extends AndroidNonvisibleComponent implements ViewListene
 
 								switch (node.state) {
 								case 'a': // STATE_INIT
+									node.view_Spinner.getView().setEnabled(true);
 									node.view_buttons.get("btn1").Enabled(true);
 									node.view_buttons.get("btn2").Enabled(true);
 									node.view_buttons.get("btn3").Enabled(false);
 									node.view_buttons.get("btn4").Enabled(false);
 									break;
 								case 'b': // STATE_REQUEST_SCENARIO
+									node.view_Spinner.getView().setEnabled(false);
 									node.view_buttons.get("btn1").Enabled(false);
 									node.view_buttons.get("btn2").Enabled(false);
 									node.view_buttons.get("btn3").Enabled(false);
 									node.view_buttons.get("btn4").Enabled(false);
 									break;
 								case 'c': // STATE_READY
+									node.view_Spinner.getView().setEnabled(false);
 									node.view_buttons.get("btn1").Enabled(false);
 									node.view_buttons.get("btn2").Enabled(false);
 									node.view_buttons.get("btn3").Enabled(true);
 									node.view_buttons.get("btn4").Enabled(false);
 									break;
 								case 'd': // STATE_REQUEST_PLAY
+									node.view_Spinner.getView().setEnabled(false);
 									node.view_buttons.get("btn1").Enabled(false);
 									node.view_buttons.get("btn2").Enabled(false);
 									node.view_buttons.get("btn3").Enabled(false);
 									node.view_buttons.get("btn4").Enabled(false);
 									break;
 								case 'e': // STATE_PLAY
+									node.view_Spinner.getView().setEnabled(false);
 									node.view_buttons.get("btn1").Enabled(false);
 									node.view_buttons.get("btn2").Enabled(false);
 									node.view_buttons.get("btn3").Enabled(false);

@@ -27,6 +27,8 @@ public class UDPJob {
 	public final UDPEvent func;
 	public boolean single_response = true;
 
+	public boolean valid = true;
+
 	public UDPJob(UDPEvent func) {
 		t_init = System.currentTimeMillis();
 		this.func = func;

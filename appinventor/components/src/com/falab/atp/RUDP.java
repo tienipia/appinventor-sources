@@ -3,11 +3,12 @@ package com.falab.atp;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -63,7 +64,8 @@ public final class RUDP implements Runnable {
 	public static final int UDP_SERVER_MAX_LENGTH = 64;
 
 	// ip
-	private final Map<String, UDPJob> registred_jobs = Collections.synchronizedMap(new HashMap<String, UDPJob>());
+	private final Map<String, UDPJob> registred_queues = new HashMap<String, UDPJob>();
+	private final Map<String, UDPJob> registred_jobs = new HashMap<String, UDPJob>();
 
 	private final ExecutorService executors = Executors.newSingleThreadExecutor();
 	private final UDPServer _server;
@@ -79,30 +81,36 @@ public final class RUDP implements Runnable {
 			String opCode = new String(data, 0, 2);
 			UDPJob j = registred_jobs.get(opCode);
 
-			if (j != null) {
+			if (j != null && j.valid) {
 				if (j.single_response) {
-					registred_jobs.remove(opCode);
+					j.valid = false;
 				}
+
 				j.func.response(opCode, System.currentTimeMillis() - j.t_init, clientAddress.getHostAddress(),
 						Arrays.copyOfRange(data, 2, length - 1));
 			}
 		}
 	}
 
+	private synchronized void register_job() {
+		registred_jobs.putAll(registred_queues);
+		registred_queues.clear();
+	}
+
 	@Override
 	public void run() {
 		long current_t;
-		Set<String> jobNames;
+		List<String> jobNames = new ArrayList<>();
 		while (true) {
-			jobNames = registred_jobs.keySet();
-
-			for (String jobName : jobNames) {
-				UDPJob j = registred_jobs.get(jobName);
-				if (j != null) {
+			jobNames.clear();
+			register_job();
+			for (Entry<String, UDPJob> e : registred_jobs.entrySet()) {
+				UDPJob j = e.getValue();
+				if (j.valid) {
 					current_t = System.currentTimeMillis();
 					if (current_t > j.t_init + RUDP.UDP_READ_TIMEOUT) {
-						registred_jobs.remove(jobName);
-						j.func.response(jobName, 0, null, null);
+						j.valid = false;
+						j.func.response(e.getKey(), 0, null, null);
 					} else if (current_t > (j.t_last + RUDP.UDP_RESEND_INTERVAL) && j.cnt < j.max_retries) {
 						if (j.with_offset) {
 							String offsetStr = new String(j.send_data);
@@ -115,8 +123,15 @@ public final class RUDP implements Runnable {
 						j.cnt++;
 
 					}
+				} else {
+					jobNames.add(e.getKey());
 				}
 			}
+
+			for (String jobName : jobNames) {
+				registred_jobs.remove(jobName);
+			}
+
 			try {
 				Thread.sleep(25);
 			} catch (Exception e) {
@@ -126,8 +141,8 @@ public final class RUDP implements Runnable {
 
 	}
 
-	public void send(String jobName, UDPJob job) {
-		registred_jobs.put(jobName, job);
+	public synchronized void send(String jobName, UDPJob job) {
+		registred_queues.put(jobName, job);
 	}
 
 	private void udp_send(final byte[] data, final InetAddress addr, final boolean broadcast) {
